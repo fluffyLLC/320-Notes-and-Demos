@@ -10,7 +10,7 @@ obj.y = 69 //<--- this is also valid as objects can be changed dynamically
 
 obj.update = fnction(){console.log("wow, I am updating");};//this also applies for functions
 
-//old js doesn't have classes
+//old js doesn't have classes, functions used to be a stand in
 
 function person(){
 
@@ -25,23 +25,23 @@ var jim = new person();
 
 jim.sayHello();
 
-//classes have been added recently though in ES6
+//However, classes have been added recently though in ES6
 
 class Sprite{
 
-	constructor(){
+	constructor(){ //variables should be declared in the constructor can
 		this.x = 0;
 		this.y = 154;
 		this.rotation = 45
 	}
 
 	die(){
-		this.isDead = true;
+		this.isDead = true; //<---Variables can still be added dynamically
 	}
 }
 
 
-class Enemy extends Sprite{
+class Enemy extends Sprite{ //Inheritence does exist
 	constructor(){
 		super();//must call the super's constructor to access properties
 
