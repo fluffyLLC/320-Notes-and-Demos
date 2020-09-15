@@ -20,13 +20,13 @@ class Server {
 
 	
 
-
+/*
 	makeServer(){
-		console.log(`Making Sarver @ port ${this.portNum} ...`);
+		console.log(`Making Server @ port ${this.portNum} ...`);
 		this.server = net.createServer({}, (socketToClient)=>{
 			this.onServerStartup(socketToClient)
 				
-/*
+
 				console.log(socketToClient.localAddress + " has connected!");
 				this.clients.push(socketToClient);//add new client to list of clients
 
@@ -34,12 +34,13 @@ class Server {
 	
 
 				socketToClient.write("Welcome to my server.");
-*/
+
 
 			});
 		return this.server;
 
 	}
+	*/
 
 	onServerStartup(socketToClient){
 		console.log(socketToClient.localAddress + " has connected!");
@@ -61,7 +62,7 @@ class Server {
 		socketToClient.on("close", ()=>{//
 			console.log("A client has disconnected...");
 			this.clients.splice(this.clients.indexOf(socketToClient), 1); //get index of exiting client and remove it from the clients array
-			console.log(this.clients.Length);
+			//console.log(this.clients.Length);
 
 		});
 

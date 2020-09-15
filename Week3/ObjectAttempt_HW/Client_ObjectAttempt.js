@@ -24,18 +24,18 @@ class User {
 	}
 
 	constructor(){
-		this.color = {r:255,g:255,b:255}
+		this.color = {r:255,g:255,b:255}//potentially useful properties
 		this.userIndex;
 		this.userName = "CoolFella";
 		this.userID = "SAJABH";
-		this.socketToServer = net.connect({port:this.portNum, ip:this.targetIP}, this.onConnectedToServer());
-		this.appendEventListeners();
+
+		this.socketToServer = net.connect({port:this.portNum, ip:this.targetIP}, this.onConnectedToServer()); //establish connection
+		this.appendEventListeners(); //create listeners
 
 	}
 
 	onConnectedToServer(){
 		console.log("we are now connected to the server")
-		//this.socketToServer.
 
 		
 	}
