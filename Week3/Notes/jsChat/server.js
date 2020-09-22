@@ -37,10 +37,9 @@ const Packet = {
 	buildFromParts:function(arr){
 		return arr.join(this.charDelimiter)+this.charEndOfPacket;
 	},
-
-
-
 };
+
+
 
 //console.log(Packet.buildFromParts(["CHAT","Nick","fun"]));
 
@@ -89,24 +88,41 @@ class Client {
 		switch(parts[0]){
 			case "CHAT": 
 
-				server.broadcast(Packet.buildChat(this.userName,parts[1]));
+				this.server.broadcast(Packet.buildChat(this.userName,parts[1]));
 
 				break;
 
-			case "DMSG": 
+			case "DMSG":
+				//console.log("DM recieved from " + parts[1]);
+
+				this.server.clients.forEach(c=>{
+					if(c.userName == parts[1] || c.socket.localAddress == parts[1]){
+						c.sendPacket(Packet.buildDM(this.userName,parts[2]));
+						//break; // <--------- will this actually break out of the foreach function?
+					}
+				});
 
 				break;
 
 			case "NAME": 
 
 				const newName = parts[1];
+				var nameUnique = true;
 
-				//TODO: accept or reject new name
+				this.server.clients.forEach(c=>{
+					if(newName == c.userName){
+						nameUnique = false;
+					}
+				});
+				
+				if(nameUnique){
+					this.userName = newName;
+					this.sendPacket(Packet.buildNameOkay());
+					this.sendPacket(Packet.buildList(this.server.clients));
+				}else{
 
-				this.userName = newName;
-				this.sendPacket(Packet.buildNameOkay());
-
-				//TODO: send LIST packet out to all users
+					this.sendPacket(Packet.buildNameBad("Name already in use"));
+				}
 
 				break;
 
@@ -146,16 +162,30 @@ class Server {
 	}
 
 	onClientConnect(socketToClient){
-		console.log("A new client has connected from " + socketToClient.localAddress)
+		var message = "A new client has connected from " + socketToClient.localAddress;
+
+
 		this.clients.push(new Client(socketToClient,this));
+
+		console.log(message);
+		this.broadcast(Packet.buildAnnouncment("A new client has connected!"));
+
 		//TODO: broadcast List to everyone
+		this.broadcast(Packet.buildList(this.clients));
 
 	}
 
 	onClientDisconnect(client){
-		console.log("client has disconnected");
+
+		var message;
+		if(client.userName) message = client.userName + " has disconnected";
+		else message = client.socket.localAddress + " has disconnected";
+		
 		this.clients.splice(this.clients.indexOf(client),1);
-		//TODO: broadcast List to everyone
+		console.log(message);
+
+		this.broadcast(Packet.buildAnnouncment(message));
+		this.broadcast(Packet.buildList(this.clients));
 
 	}
 
@@ -168,9 +198,6 @@ class Server {
 		//sends packet to all connected clients
 		this.clients.forEach(c=>{c.sendPacket(packet);});
 	}
-
-
-
 
 }
 

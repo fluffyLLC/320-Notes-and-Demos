@@ -45,13 +45,13 @@ NOKY\n
 	When the server recives a NAME packet from a client and the name is 
 	accepted by the server, the server sends out this packet type to the clieny
 
-NBAD\t(message)\n
+NBAD\t(message)\n 
 	When the server recives a NAME packet from a client, 
 	and the name is not accepted by the server, the server 
 	sends out this packet type
 
-DMSG\t(sender)\t(message)\n
+DMSG\t(sender)\t(message)\n 
 
 
-LIST\t(user)\t(user)...\n
+LIST\t(user)\t(user)...\n 
 	List of active users, send out on connect, disconect, and name update. 
