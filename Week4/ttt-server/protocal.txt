@@ -1,0 +1,84 @@
+TictacTtoe Protocol (TTTP) v1.0
+===============================
+
+Whatneeds to be stores on the server?
+ - state of the board
+ - whose turn it is
+ - if someone has one
+
+Packest from server
+-------------------
+
+JOIN (response) - When the server recives a JOIN packet, it must decide wether or not the clinet is allowed to join.
+
+	O	L	Datatype	Desc
+	-------------------------------------------------------
+	0	4	ascii		packet type: "JOIN"
+	4	1	uint8		join response (see below)
+
+	join response
+	---------------------------------------
+	1: player "X"
+	2: player "O"
+	3: spectator
+	4: username to short
+	
+UPDT - The state of the game
+
+	O	L	Datatype	Desc
+	-------------------------------------------
+	0	4	ascii		packet type: "UPDT"
+	4	1	uint8		whose turn (1/2)
+	5	1	uint8		victory state (seebelow)
+	6	9	uint8 x9	the values in spots 1-9
+
+	who's won
+	--------------------------------------------
+	0: currently playing the game
+	1: player "X" has won the game
+	2: player "O" has won the game
+	3: cat's game
+	4: game canceled
+
+CHAT - when reciving a chat packet from a client the server sends this chat packet out to all connected, exept for the orifinal sender
+
+	O	L	Datatype	Desc
+	---------------------------------------------------
+	0	4	ASCII		packet type: "Chat"
+	4	1	uint8		length of the username
+	5	2	Uint16		length of the chat messege
+
+PLAY - This packet should be submitted when the player takes their turn
+	
+	O	L	DATATYPE	DESC
+	-----------------------------------------------------
+	0	4	ASCII		packet type:play	
+	4	1	uint8		colom number
+	5	1	uint8		row number
+			
+
+	
+
+
+
+
+Packets from Client
+-------------------
+
+JOIN (request) - after establishing a connection w/the server, clinet will send a JOIN packet w/ a desired username. The server will send back a response.
+
+
+	O	L	Datatype	Desc
+-------------------------------------------------------
+	0	4	ASCII		packet type JOIN
+	4	1	uint8		howlong teh username is (255 max)
+	5	?	ascii		the desired username	
+	
+
+CHAT - the player wants to chat.
+	
+	O	L	Datatype	Desc
+	-----------------------------------------------------
+	0	4	ASCII		packet type: "CHAT"
+	4	1	uint16		length of messege(255 max)
+	6	?	ASCII		messege for the chat		
