@@ -10,6 +10,13 @@ JOIN - Sent when joingin the game
 	========================
 	0	4	ascii		"JOIN"
 
+INPT - Current State of teh clients Input from the player
+
+	O 	L	Datatype	Desc
+	================================
+	0	4	ascii		"INPT"
+	4	1	int			directrion of horisontal input
+	
 
 
 Packets From Server
@@ -20,6 +27,7 @@ BALL - the balls position
 	O	L	Datatype	Desc
 	========================
 	0	4	ascii		"BALL"
+	4	4	uint32		frame-number
 	4	4	float		x position
 	8	4	float		y position
 	12	4	float		z position

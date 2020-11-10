@@ -8,6 +8,17 @@ using System;
 public class ClientUDP : MonoBehaviour
 {
     UdpClient sock = new UdpClient();
+    private static ClientUDP _singleton;
+    public static ClientUDP singleton{
+        get {
+            return _singleton;
+        }
+
+        private set { _singleton = value; }
+    
+    }
+    //ack = agknowlage // most recent ball update packet that has been recieved
+    uint ackBallUpdate = 0;
 
     public Transform Ball;
 
@@ -16,8 +27,19 @@ public class ClientUDP : MonoBehaviour
     {
         ListenForPackets();
 
-        Buffer packet = Buffer.From("JOIN");
-        SendPacket(packet);
+        if (singleton != null)
+        {
+            Destroy(gameObject);
+
+        }
+        else {
+            singleton = this;
+
+            Buffer packet = Buffer.From("JOIN");
+            SendPacket(packet);
+        }
+
+        
     }
 
     async void ListenForPackets() {
@@ -49,11 +71,21 @@ public class ClientUDP : MonoBehaviour
         string id = packet.ReadString(0, 4);
         switch (id) {
             case "BALL":
-                if (packet.Length < 16) return;
+                if (packet.Length < 20) return;
 
-                float x = packet.ReadSingleLE(4);
-                float y = packet.ReadSingleLE(8);
-                float z = packet.ReadSingleLE(12);
+                uint packetNum = packet.ReadUInt32BE(4);
+
+                if (packetNum < ackBallUpdate) {
+                    return;
+                }
+
+                ackBallUpdate = packetNum;
+
+                print(ackBallUpdate);
+
+                float x = packet.ReadSingleBE(8);
+                float y = packet.ReadSingleBE(12);
+                float z = packet.ReadSingleBE(16);
 
 
                 Ball.position = new Vector3(x, y, z);
@@ -69,7 +101,8 @@ public class ClientUDP : MonoBehaviour
         
     }
 
-    async void SendPacket(Buffer packet) {
+    async public void SendPacket(Buffer packet) {
+        if (sock == null) return;
 
         //Buffer packet = Buffer.From("Hello world!");
         await sock.SendAsync(packet.bytes, packet.bytes.Length, "127.0.0.1", 320);
