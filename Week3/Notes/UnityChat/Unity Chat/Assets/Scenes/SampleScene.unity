@@ -1007,10 +1007,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b2dc274f65c2b849899c85f4a9cf980, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  host: 127.0.0.1
-  port: 320
-  chatDisplay: {fileID: 1376781203}
-  inputDisplay: {fileID: 917573828}
 --- !u!4 &944163112
 Transform:
   m_ObjectHideFlags: 0

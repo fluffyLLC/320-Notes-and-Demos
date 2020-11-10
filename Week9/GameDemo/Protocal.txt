@@ -1,0 +1,25 @@
+Game Demo Protocol
+
+
+Packets from Client
+===================
+
+JOIN - Sent when joingin the game
+
+	O	L	Datatype	Desc
+	========================
+	0	4	ascii		"JOIN"
+
+
+
+Packets From Server
+=======================
+
+BALL - the balls position
+
+	O	L	Datatype	Desc
+	========================
+	0	4	ascii		"BALL"
+	4	4	float		x position
+	8	4	float		y position
+	12	4	float		z position
