@@ -14,7 +14,8 @@ public class GetInput : MonoBehaviour
     void Update()
     {
         Buffer b = PacketBuilder.CurrentInput();
-        ClientUDP.singleton.SendPacket(b);
+        if(b != null) ClientUDP.singleton.SendPacket(b);
+
 
 
     }

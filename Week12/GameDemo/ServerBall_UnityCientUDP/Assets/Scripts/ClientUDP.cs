@@ -35,8 +35,16 @@ public class ClientUDP : MonoBehaviour
         else {
             singleton = this;
 
+            ObjectRegistry.RegisterAll();
+
+            NetworkObject obj =  ObjectRegistry.SpawnFrom("PAWN");
+
+            print(obj);
+
             Buffer packet = Buffer.From("JOIN");
             SendPacket(packet);
+
+
         }
 
         
