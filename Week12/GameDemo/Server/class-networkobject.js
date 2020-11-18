@@ -11,6 +11,9 @@ exports.NetworkObject = class NetworkObject{
 
 	}
 
+	serialize(){}
+	deserialize(){}
+
 
 }
 
