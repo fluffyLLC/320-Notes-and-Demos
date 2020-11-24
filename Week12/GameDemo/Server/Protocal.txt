@@ -22,12 +22,23 @@ INPT - Current State of teh clients Input from the player
 Packets From Server
 =======================
 
-BALL - the balls position
+REPL - sent when creating/updating/deleating game objects
 
-	O	L	Datatype	Desc
-	========================
-	0	4	ascii		"BALL"
-	4	4	uint32		frame-number
-	4	4	float		x position
-	8	4	float		y position
-	12	4	float		z position
+	O 	L	Datatype	Desc
+	================================
+	0	4	ascii		"REPL"
+	4	1	uint8		1/2/3 (create/update/delete)
+
+	5	4	ascii		class ID e.g. "Player"			 |
+	9 	??	searialize	???	
+
+
+////////////////////////old/////////////////////////////////////////////////
+														_
+	5	1	uint8		how many objects?				 |
+	6	4	ascii		class ID e.g. "Player"			 |
+	10 	??	searialize	???								 |
+														 | <<<<<<<<<< Creating and updating
+	?	1	uint8		how many objects?				 |
+	?	4	ascii		class ID e.g. "Player"			 |
+	? 	??	searialize	???								_|

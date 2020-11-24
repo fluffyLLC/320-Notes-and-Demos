@@ -74,9 +74,15 @@ exports.Server = class Server{
 		const client = new Client(rinfo);
 		this.clients[key] = client;
 
+
+
 		this.showClientList();
 
+
 		// TODO: sent CREATE replication packets for every object...
+		const packet = this.game.makeREPL(false);
+		this.sendPacketToClient(packet,client);// TODO: needs ACK!! 
+
 
 		return client;
 
@@ -123,7 +129,7 @@ exports.Server = class Server{
 	}
 
 	sendPacketToClient(packet,client){
-
+		//console.log("sending Pakcet");
 		this.sock.send(packet, 0, packet.length, client.rinfo.port, client.rinfo.address,()=>{});
 
 	}

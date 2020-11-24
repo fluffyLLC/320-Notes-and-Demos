@@ -30,16 +30,14 @@ public class ClientUDP : MonoBehaviour
         if (singleton != null)
         {
             Destroy(gameObject);
+            
 
         }
         else {
             singleton = this;
+            DontDestroyOnLoad(gameObject);
 
-            ObjectRegistry.RegisterAll();
-
-            NetworkObject obj =  ObjectRegistry.SpawnFrom("PAWN");
-
-            print(obj);
+            ListenForPackets();
 
             Buffer packet = Buffer.From("JOIN");
             SendPacket(packet);
@@ -78,40 +76,104 @@ public class ClientUDP : MonoBehaviour
 
         string id = packet.ReadString(0, 4);
         switch (id) {
-            case "BALL":
-                if (packet.Length < 20) return;
+            case "REPL":
 
-                uint packetNum = packet.ReadUInt32BE(4);
-
-                if (packetNum < ackBallUpdate) {
-                    return;
-                }
-
-                ackBallUpdate = packetNum;
-
-                print(ackBallUpdate);
-
-                float x = packet.ReadSingleBE(8);
-                float y = packet.ReadSingleBE(12);
-                float z = packet.ReadSingleBE(16);
-
-
-                Ball.position = new Vector3(x, y, z);
+                ProcessPacketREPL(packet);
+                
 
                 break;
-        
-        
-        
-        
-        
+
+
+
+
+
         }
 
         
     }
 
+    private void ProcessPacketREPL(Buffer packet)
+    {
+        if (packet.Length < 5) return;
+
+        int replType = packet.ReadUInt8(4);
+
+        if (replType != 1 && replType != 2 && replType != 3) return;
+
+        int offset = 5;
+
+        int loopCap = 0;
+        while (offset <= packet.Length)
+        {
+            
+            //print("offset: " + offset + "packetL: " + packet.Length); 
+            if (packet.Length < offset + 5) return;
+            int networkID = packet.ReadUInt8(offset + 4);
+            //print("ID: "+ networkID);
+
+
+            switch (replType)
+            {
+
+                case 1: // create:
+                    print("REPL packet CREATE recived...");
+                    string classID = packet.ReadString(offset, 4);
+                    
+                    NetworkObject obj = ObjectRegistry.SpawnFrom(classID);
+
+                    if (obj == null) return;//error class ID not found
+                    //print(classID);
+                    offset += 4; //trim out ClassID off the beginning of packet data
+
+                    Buffer chunk = packet.Slice(offset);
+                    //print(chunk);
+
+                    offset += obj.Deserialize(chunk);
+                    NetworkObject.AddObject(obj);
+
+
+                    break;
+                case 2: // update:
+
+                    
+                    NetworkObject obj2 = NetworkObject.GetObjectByNetworkID(networkID);
+                    
+                    if (obj2 == null) return;
+                    //print("update recived");
+
+                    offset += 4; //trim out ClassID off the beginning of packet data
+                    offset += obj2.Deserialize(packet.Slice(offset));
+                    
+                    //lookup object, using network ID
+
+                    //update it
+
+                    break;
+                case 3: // delete:
+                   
+                    NetworkObject obj3 = NetworkObject.GetObjectByNetworkID(networkID);
+                    if (obj3 == null) return;
+
+                    //offset += 4;
+                    NetworkObject.RemoveObject(networkID);//remove obj from list of network objects
+                    Destroy(obj3.gameObject);// remove obj from game
+                    //lookup object, using network ID
+                    //update it
+
+                    break;
+
+            }
+
+            //print("offset: " + offset + "packetL: " + packet.Length);
+            //loopCap++;
+            //if(loopCap > 255)break;
+            break;
+        }
+    }
+
     async public void SendPacket(Buffer packet) {
         if (sock == null) return;
-
+        if (packet == null) return;
         //Buffer packet = Buffer.From("Hello world!");
         await sock.SendAsync(packet.bytes, packet.bytes.Length, "127.0.0.1", 320);
     }
