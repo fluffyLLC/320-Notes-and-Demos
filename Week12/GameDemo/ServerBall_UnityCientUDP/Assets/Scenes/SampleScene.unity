@@ -313,6 +313,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5aee98a399cad404f84a89661a93597c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  serverHOST: 127.0.0.1
+  serverPORT: 320
   Ball: {fileID: 0}
 --- !u!114 &963194230
 MonoBehaviour:

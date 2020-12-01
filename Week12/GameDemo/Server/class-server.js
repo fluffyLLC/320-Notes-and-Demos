@@ -1,6 +1,6 @@
 const Game = require("./class-game.js").Game;
 const Client = require("./class-client.js").Client;
-
+const Pawn = require("./class-pawn.js").Pawn;
 
 exports.Server = class Server{
 
@@ -18,6 +18,7 @@ exports.Server = class Server{
 
 		this.game = new Game(this);
 
+		//this.game.objs.
 
 		this.port = 320;
 		this.sock.bind(this.port);
@@ -47,7 +48,7 @@ exports.Server = class Server{
 
 		if(c) {
 			//console.log("client exists")
-			c.onPacket(msg);
+			c.onPacket(msg,this.game);
 
 		} else {
 			if(packetID == "JOIN"){
@@ -72,6 +73,10 @@ exports.Server = class Server{
 	makeClient(rinfo){
 		const key = this.getKeyFromRinfo(rinfo);
 		const client = new Client(rinfo);
+
+		//depending on scene (and other conditions) spawn pawn
+		client.spawnPawn(this.game);
+
 		this.clients[key] = client;
 
 
@@ -87,6 +92,17 @@ exports.Server = class Server{
 		return client;
 
 	}
+
+	disconnectClient(client){
+		//console.log("disconnect called");
+
+		if(client.pawn) this.game.removeObject(client.pawn);
+		const key = this.getKeyFromRinfo(client.rinfo);
+		delete this.clients[key];
+
+		this.showClientList();
+	}
+
 	showClientList(){
 		console.log("======= "+Object.keys(this.clients).length + " =======") //this.clients.length will not work becuse our objects are refrenced via keys
 
@@ -115,8 +131,6 @@ exports.Server = class Server{
 
 			sendPacketToClient(packet,c);
 			
-
-
 			});*/
 
 		for(var key in this.clients){
@@ -131,6 +145,14 @@ exports.Server = class Server{
 	sendPacketToClient(packet,client){
 		//console.log("sending Pakcet");
 		this.sock.send(packet, 0, packet.length, client.rinfo.port, client.rinfo.address,()=>{});
+
+	}
+
+	update(game){
+		for (let key in this.clients){
+			this.clients[key].update(game);
+
+		}
 
 	}
 

@@ -2,7 +2,12 @@ const Pawn = require("./class-pawn.js").Pawn;
 
 
 exports.Game = class Game {
+
+	static Singleton;
+
 	constructor(server){
+
+		Game.Singleton = this;
 		
 		this.frame = 0;
 		this.timeTillStateUpdate = 0;
@@ -12,9 +17,6 @@ exports.Game = class Game {
 		this.objs = []; // store NetworkObjects in here
 
 		this.server = server;
-
-		this.spawnObject(new Pawn());
-
 		this.update();
 	}
 
@@ -23,15 +25,13 @@ exports.Game = class Game {
 		this.time += this.dt;
 		this.frame++;
 
-		const player = this.server.getPlayer(0);
+		this.server.update(this);//check clients for disconnects ect
 
 		for(var i in this.objs){
 			this.objs[i].update(this);
 		}
 
-		if(player){
-			//this.ballPos.x += player.input.axisH * 1 * this.dt;
-		}
+		
 
 		//this.ballPos.x = Math.sin(this.time) * 2;
 		/*if(this.server.clients.length > 0){
@@ -56,7 +56,7 @@ exports.Game = class Game {
 	}
 
 	sendWorldState(){
-		console.log("sending world state");
+		//console.log("sending world state");
 		const packet = this.makeREPL(true);
 
 		this.server.sendPacketToAll(packet);
@@ -92,13 +92,13 @@ exports.Game = class Game {
 
 	}
 
-	spawnObject(obj){
+	spawnObject(obj){ // Instantiate()
 		this.objs.push(obj);
 
 		var packet = Buffer.alloc(5);
 
 		packet.write("REPL",0);
-		packet.writeUInt8(2,4);
+		packet.writeUInt8(1,4);
 		
 		const classID = Buffer.from(obj.classID);
 		const data = obj.serialize();
@@ -111,6 +111,25 @@ exports.Game = class Game {
 
 		
 		//TODO: send Create replication packet
+
+	}
+
+	removeObject(obj){// Destroy()
+		const index = this.objs.indexOf(obj);
+
+		if(index < 0) return;
+
+		const netID = this.objs[index].networkID;//
+
+		this.objs.splice(index,1);//remove object from array
+
+		const packet = Buffer.alloc(6);
+		packet.write("REPL",0)
+		packet.writeUInt8(3,4);
+		packet.writeUInt8(netID,5);
+
+		this.server.sendPacketToAll(packet);
+
 
 	}
 

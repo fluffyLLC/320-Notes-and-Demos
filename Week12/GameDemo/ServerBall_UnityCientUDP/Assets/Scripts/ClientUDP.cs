@@ -7,7 +7,12 @@ using System;
 
 public class ClientUDP : MonoBehaviour
 {
+    public string serverHOST = "127.0.0.1";
+    public ushort serverPORT = 320; 
+
+
     UdpClient sock = new UdpClient();
+
     private static ClientUDP _singleton;
     public static ClientUDP singleton{
         get {
@@ -36,6 +41,10 @@ public class ClientUDP : MonoBehaviour
         else {
             singleton = this;
             DontDestroyOnLoad(gameObject);
+
+            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(serverHOST), serverPORT);
+            sock = new UdpClient(ep.AddressFamily);
+            sock.Connect(ep);
 
             ListenForPackets();
 
@@ -71,7 +80,7 @@ public class ClientUDP : MonoBehaviour
 
     private void ProcessPacket(Buffer packet)
     {
-        print("packet recieved");
+        //print("packet recieved");
         if (packet.Length < 4) return;
 
         string id = packet.ReadString(0, 4);
@@ -95,29 +104,37 @@ public class ClientUDP : MonoBehaviour
     private void ProcessPacketREPL(Buffer packet)
     {
         if (packet.Length < 5) return;
-
+       // print(packet);
         int replType = packet.ReadUInt8(4);
 
         if (replType != 1 && replType != 2 && replType != 3) return;
+        //print("repl type" + replType);
 
         int offset = 5;
 
-        int loopCap = 0;
+        //int loopCap = 0;
         while (offset <= packet.Length)
         {
-            
+
             //print("offset: " + offset + "packetL: " + packet.Length); 
-            if (packet.Length < offset + 5) return;
-            int networkID = packet.ReadUInt8(offset + 4);
+
             //print("ID: "+ networkID);
+            int networkID = 0;
 
 
             switch (replType)
             {
 
                 case 1: // create:
-                    print("REPL packet CREATE recived...");
+                    if (packet.Length < offset + 5) return;
+                    networkID = packet.ReadUInt8(offset + 4);
+                    //print("REPL packet CREATE recived...");
                     string classID = packet.ReadString(offset, 4);
+
+
+                    //check network ID
+
+                    if (NetworkObject.GetObjectByNetworkID(networkID) != null) return;
                     
                     NetworkObject obj = ObjectRegistry.SpawnFrom(classID);
 
@@ -134,8 +151,10 @@ public class ClientUDP : MonoBehaviour
 
                     break;
                 case 2: // update:
+                    if (packet.Length < offset + 5) return;
+                    networkID = packet.ReadUInt8(offset + 4);
 
-                    
+
                     NetworkObject obj2 = NetworkObject.GetObjectByNetworkID(networkID);
                     
                     if (obj2 == null) return;
@@ -150,7 +169,9 @@ public class ClientUDP : MonoBehaviour
 
                     break;
                 case 3: // delete:
-                   
+                    if (packet.Length < offset + 1) return;
+                    networkID = packet.ReadUInt8(offset);
+
                     NetworkObject obj3 = NetworkObject.GetObjectByNetworkID(networkID);
                     if (obj3 == null) return;
 
@@ -160,22 +181,30 @@ public class ClientUDP : MonoBehaviour
                     //lookup object, using network ID
                     //update it
 
+                    offset++;
+
                     break;
 
             }
 
             //print("offset: " + offset + "packetL: " + packet.Length);
             //loopCap++;
-            //if(loopCap > 255)break;
-            break;
+           // if(loopCap > 255)break;
+            //break;
         }
     }
+
+    
 
     async public void SendPacket(Buffer packet) {
         if (sock == null) return;
         if (packet == null) return;
         //Buffer packet = Buffer.From("Hello world!");
-        await sock.SendAsync(packet.bytes, packet.bytes.Length, "127.0.0.1", 320);
+        if (!sock.Client.Connected) return;
+        
+
+        await sock.SendAsync(packet.bytes, packet.bytes.Length);
+
     }
 
     void Update()

@@ -31,6 +31,8 @@ REPL - sent when creating/updating/deleating game objects
 
 	5	4	ascii		class ID e.g. "Player"			 |
 	9 	??	searialize	???	
+Delete:
+	5	1	uint8		network ID
 
 
 ////////////////////////old/////////////////////////////////////////////////
