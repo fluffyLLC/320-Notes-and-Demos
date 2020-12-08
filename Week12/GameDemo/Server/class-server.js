@@ -6,7 +6,12 @@ exports.Server = class Server{
 
 	constructor(){
 
+
 		this.clients = [];
+		this.timeTilNextBroadcast = 5;
+		this.port = 320; // server listening on listening
+		this.serverName = "Test Server";
+		this.clientListenPort = 321;
 
 		//create socket
 		this.sock = require('dgram').createSocket("udp4");
@@ -16,13 +21,16 @@ exports.Server = class Server{
 		this.sock.on("listening",()=>this.onStartListen());
 		this.sock.on("message",(msg,rinfo)=>this.onPacket(msg,rinfo));
 
-		this.game = new Game(this);
 
 		//this.game.objs.
 
-		this.port = 320;
+
+		this.game = new Game(this);//fix code so that it doesn't immediatly tick?
+
 		this.sock.bind(this.port);
 		// start listening
+
+
 	}
 
 	onError(e){
@@ -142,15 +150,50 @@ exports.Server = class Server{
 
 	}
 
+	broadcastPacket(packet){
+
+		
+
+		this.sock.send(packet,0,packet.length,this.clientListenPort,undefined);
+	}
+
 	sendPacketToClient(packet,client){
-		//console.log("sending Pakcet");
-		this.sock.send(packet, 0, packet.length, client.rinfo.port, client.rinfo.address,()=>{});
+		
+
+		console.log("sending Packet " + packet.toString('utf8',0,4));
+
+		this.sock.send(packet, 0, packet.length, this.clientListenPort, client.rinfo.address,()=>{});
+
+	}
+
+	broadcastServerHost(){
+		const nameLength = this.serverName.length;
+		const packet = Buffer.alloc( 7 + nameLength);
+
+		packet.write("HOST",0);
+		packet.writeUInt16BE(this.port,4);
+		packet.writeUInt8(nameLength,6);
+		packet.write(this.serverName,7);
+
+		this.broadcastPacket(packet);
+		//console.log("broadcast packet...");
+
+		//let addr = this.sock.address();
+		//console.log()
 
 	}
 
 	update(game){
 		for (let key in this.clients){
 			this.clients[key].update(game);
+
+		}
+
+		this.timeTilNextBroadcast -= game.dt;
+
+		if(this.timeTilNextBroadcast <= 0){
+			this.timeTilNextBroadcast = 1.5;
+			this.broadcastServerHost();
 
 		}
 

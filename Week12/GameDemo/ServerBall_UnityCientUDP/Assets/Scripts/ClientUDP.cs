@@ -11,7 +11,10 @@ public class ClientUDP : MonoBehaviour
     public ushort serverPORT = 320; 
 
 
-    UdpClient sock = new UdpClient();
+    static UdpClient sendingSocket = new UdpClient();
+    static UdpClient receivingSocket = new UdpClient(321); //listen on port 321
+
+    public List<RemoteServer> availableGameServers = new List<RemoteServer>();
 
     private static ClientUDP _singleton;
     public static ClientUDP singleton{
@@ -38,48 +41,68 @@ public class ClientUDP : MonoBehaviour
             
 
         }
-        else {
+        else
+        {
             singleton = this;
             DontDestroyOnLoad(gameObject);
 
-            IPEndPoint ep = new IPEndPoint(IPAddress.Parse(serverHOST), serverPORT);
-            sock = new UdpClient(ep.AddressFamily);
-            sock.Connect(ep);
-
             ListenForPackets();
 
-            Buffer packet = Buffer.From("JOIN");
-            SendPacket(packet);
+           // Buffer packet = ConnectToServer();
+           // SendPacket(packet);
 
 
         }
 
-        
+
+    }
+
+    public void ConnectToServer(string host, ushort port)
+    {
+        IPEndPoint ep = new IPEndPoint(IPAddress.Parse(serverHOST), serverPORT);
+        sendingSocket = new UdpClient(ep.AddressFamily);
+        sendingSocket.Connect(ep);
+
+        //ListenForPackets();
+
+        print($"attempt connect to {host}, at {port}");
+
+        Buffer packet = Buffer.From("JOIN");
+        SendPacket(packet);
+        //return packet;
     }
 
     async void ListenForPackets() {
-        UdpReceiveResult res;
+
+        //receivingSocket = new UdpClient(321);
+        
         while (true)
         {
+            UdpReceiveResult res;
             try
             {
-                 res = await sock.ReceiveAsync();
+                res = await receivingSocket.ReceiveAsync();
+
+                ProcessPacket(res);
             }
             catch {
+                print("FAIL");
                 break;
             }
 
-            Buffer packet = Buffer.From(res.Buffer);
-
-
-            ProcessPacket(packet);
+            
         }
 
 
     }
 
-    private void ProcessPacket(Buffer packet)
+    private void ProcessPacket(UdpReceiveResult res)
     {
+
+        Buffer packet = Buffer.From(res.Buffer);
+       
+
+
         //print("packet recieved");
         if (packet.Length < 4) return;
 
@@ -91,14 +114,39 @@ public class ClientUDP : MonoBehaviour
                 
 
                 break;
+            case "HOST":
+                if (packet.Length < 7) return;
+
+                ushort port = packet.ReadUInt16BE(4);
+                ushort nameLength = packet.ReadUInt8(4);
+
+                if (packet.Length < 7 + nameLength) return;
+
+                string name = packet.ReadString(7, nameLength);
+
+                AddToServerList(new RemoteServer(res.RemoteEndPoint, name));
+
+                //availableGameServers.Add(new re)
+
+                //available new RemoteServer
 
 
-
-
+                break;
 
         }
 
         
+    }
+
+
+    private void AddToServerList(RemoteServer server) {
+        if (!availableGameServers.Contains(server)) {
+            availableGameServers.Add(server);
+        
+        }
+
+       // print(availableGameServers.Count);
+    
     }
 
     private void ProcessPacketREPL(Buffer packet)
@@ -194,21 +242,22 @@ public class ClientUDP : MonoBehaviour
         }
     }
 
-    
-
     async public void SendPacket(Buffer packet) {
-        if (sock == null) return;
+        if (sendingSocket == null) return;
         if (packet == null) return;
         //Buffer packet = Buffer.From("Hello world!");
-        if (!sock.Client.Connected) return;
+        if (!sendingSocket.Client.Connected) return;
         
 
-        await sock.SendAsync(packet.bytes, packet.bytes.Length);
+        await sendingSocket.SendAsync(packet.bytes, packet.bytes.Length);
 
     }
 
-    void Update()
+
+    private void OnDestroy()
     {
-        
+        if (sendingSocket != null) sendingSocket.Close();
+        if (receivingSocket != null) receivingSocket.Close();
     }
+
 }

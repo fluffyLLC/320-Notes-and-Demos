@@ -22,6 +22,17 @@ INPT - Current State of teh clients Input from the player
 Packets From Server
 =======================
 
+HOST - Periodically sent over networks to broadcast server IP and Port
+
+	O 	L	Datatype	Desc
+	================================
+	0	4	ascii		"HOST"
+	4	2	uint16		length of the server name
+	6	1	uint8		length of server name
+	7	?	ascii		name of server
+
+
+
 REPL - sent when creating/updating/deleating game objects
 
 	O 	L	Datatype	Desc
